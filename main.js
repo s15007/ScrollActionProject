@@ -18,7 +18,9 @@ window.onload = function () {
     game.preload(
         'images/chara2.png'
         ,'images/button1.png'
-        ,'images/button2.png'
+        ,'images/button1a.png'
+        ,'images/button2.gif'
+        ,'images/button2a.gif'
         ,'images/takara.png'
         ,'images/map2_32.png'
         ,'images/start.png'
@@ -130,10 +132,12 @@ window.onload = function () {
             });
 
             var btn_start = new Sprite(150, 60);
+            btn_start.scaleX = 1.2;
+            btn_start.scaleY = 1.2;
             btn_start.image = game.assets['images/button1.png'];
             btn_start.moveTo(490, 370);
             btn_start.addEventListener('touchstart', function() {
-              this.image = game.assets['images/button2.png'];
+              this.image = game.assets['images/button1a.png'];
             });
             btn_start.addEventListener('touchend', function() {
               var btn_sound = game.assets['sounds/button.mp3'].clone();
@@ -418,6 +422,7 @@ window.onload = function () {
 
             var player = new Player(160, 320);
             player.addEventListener(Event.ENTER_FRAME, function() {
+              console.log("x = " + this.x + "  y = " + this.y);
                 var friction = 0;
                 if (this.vx > 0.3) {
                     friction = -0.4;
@@ -587,7 +592,33 @@ window.onload = function () {
                         this.frame = 1;
                         player.isDead = true;
                         if (this.y > GAME_HEIGHT) {
+                          	game_playing_scene.removeChild(stage);
                             CREATE_GAME_OVER_SCENE();
+                        }
+                        if (player.isDead) {
+                          game_playing_scene.removeChild(enemy1);
+                          game_playing_scene.removeChild(enemy2);
+                          game_playing_scene.removeChild(enemy3);
+                          game_playing_scene.removeChild(enemy4);
+                          game_playing_scene.removeChild(enemy5);
+                          game_playing_scene.removeChild(enemy6);
+                          game_playing_scene.removeChild(coins1);
+                          game_playing_scene.removeChild(coins2);
+                          game_playing_scene.removeChild(coins3);
+                          game_playing_scene.removeChild(coins4);
+                          game_playing_scene.removeChild(coins5);
+                          game_playing_scene.removeChild(coins6);
+                          game_playing_scene.removeChild(coins7);
+                          game_playing_scene.removeChild(coins8);
+                          game_playing_scene.removeChild(coins9);
+                          game_playing_scene.removeChild(coins10);
+                          game_playing_scene.removeChild(coins11);
+                          game_playing_scene.removeChild(coins12);
+                          game_playing_scene.removeChild(coins13);
+                          game_playing_scene.removeChild(dragonball);
+                          game_playing_scene.removeChild(treasure);
+                          game_playing_scene.removeChild(jumpPad);
+                          game_playing_scene.removeChild(pad);
                         }
                     });
                     this.removeEventListener('enterframe', arguments.callee);
@@ -633,8 +664,10 @@ window.onload = function () {
             var treasure = new Sprite(130, 250);
             treasure.image = game.assets['images/takara.png'];
             treasure.x = 0;
-            treasure.y = 370;
-            treasure.pos = map.width - 150;
+            treasure.y = 290;
+            treasure.scaleX = 3;
+            treasure.scaleY = 3;
+            treasure.pos = map.width - 250;
             treasure.isOpen = false;
             treasure.addEventListener('enterframe', function() {
               if (this.intersect(player) && !this.isOpen) {
@@ -655,10 +688,10 @@ window.onload = function () {
             var dragonball = new Sprite(50, 50);
             dragonball.image = game.assets['images/dragonball.png'];
             dragonball.x = 0;
-            // dragonball.y = 100;
-            dragonball.y = 500;
-            // dragonball.pos = map.width - 4765;
-            dragonball.pos = 100;
+            dragonball.y = 100;
+            // dragonball.y = 500;
+            dragonball.pos = map.width - 4765;
+            // dragonball.pos = 100;
             dragonball.addEventListener('enterframe', function() {
               if (this.intersect(player) && !this.isOpen) {
                  super_saiyajin.play();
@@ -706,6 +739,16 @@ window.onload = function () {
             var coins11 = new Coins(0, coinsY, 2060);
             var coins12 = new Coins(0, coinsY, 2100);
             var coins13 = new Coins(0, coinsY, 2140);
+            var coins14 = new Coins(0, 40, 5100);
+            var coins15 = new Coins(0, 260, 5300);
+            var coins16 = new Coins(0, 40, 5500);
+            var coins17 = new Coins(0, 260, 5700);
+            var coins18 = new Coins(0, 40, 5900);
+            var coins19 = new Coins(0, 260, 6100);
+            var coins20 = new Coins(0, 40, 6300);
+            var coins21 = new Coins(0, 260, 6500);
+
+
         };
         //ゲームクリア画面
         var CREATE_GAME_CLEAR = function() {
@@ -713,13 +756,18 @@ window.onload = function () {
           var game_clear = new Scene();
           var game_clear_bg = new Sprite(GAME_WIDTH, GAME_HEIGHT);
           var kan = new Sprite(250, 250);
-          var btn_back = new Button("スタート画面に戻る", "light");
-          btn_back.moveTo(420, 400);
-          btn_back.scaleX = 3;
-          btn_back.scaleY = 3;
-          btn_back.addEventListener('touchstart', function() {
+          var btn = new Sprite(200, 60);
+          btn.image = game.assets['images/button2.gif'];
+          btn.x = 490;
+          btn.y = 400;
+          btn.scaleX = 1.2;
+          btn.scaleY = 1.2;
+          gameStart = false;
+          btn.addEventListener('touchstart', function(e) {
+              this.image = game.assets['images/button2a.gif'];
+          });
+          btn.addEventListener('touchend', function() {
             btn_sound.play();
-            gameStart = false;
             CREATE_GAME_TITLE();
           });
           game_clear_bg.image = game.assets['images/game_clear.png'];
@@ -732,7 +780,7 @@ window.onload = function () {
             if (checkTime >= 3.0) game_clear.addChild(kan);
           });
           game_clear.addChild(game_clear_bg)
-          game_clear.addChild(btn_back);
+          game_clear.addChild(btn);
 
           game.pushScene(game_clear);
         };
@@ -740,25 +788,30 @@ window.onload = function () {
         var CREATE_GAME_OVER_SCENE = function() {
             var game_over = new Scene();
             var game_over_bg = new Sprite(GAME_WIDTH, GAME_HEIGHT);
-            var btn_retry = new Button("リトライ", "light");
-            btn_retry.moveTo(GAME_WIDTH/2-75, 400);
-            btn_retry.scaleX = 3;
-            btn_retry.scaleY = 3;
+            var btn = new Sprite(200, 60);
+            btn.image = game.assets['images/button2.gif'];
+            btn.x = 490;
+            btn.y = 400;
+            btn.scaleX = 1.2;
+            btn.scaleY = 1.2;
             gameStart = false;
-            btn_retry.addEventListener('touchstart', function(e) {
-                btn_sound.play();
-                CREATE_GAME_TITLE();
+            btn.addEventListener('touchstart', function(e) {
+                this.image = game.assets['images/button2a.gif'];
+            });
+            btn.addEventListener('touchend', function() {
+              btn_sound.play();
+              CREATE_GAME_TITLE();
             });
             game_over_bg.image = game.assets['images/game_over.png'];
             game_over.addChild(game_over_bg);
-            game_over.addChild(btn_retry);
+            game_over.addChild(btn);
 
             game.pushScene(game_over);
         };
         //ゲームロード時
         this.addEventListener('load', function() {
-            // CREATE_GAME_TITLE();
-            CREATE_GAME_SCENE();
+            CREATE_GAME_TITLE();
+            // CREATE_GAME_SCENE();
             // CREATE_GAME_CLEAR();
         });
     };
