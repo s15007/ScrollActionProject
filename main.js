@@ -48,18 +48,35 @@ window.onload = function () {
         ,'sounds/game_bgm3.mp3'
         ,'sounds/b_074.mp3'
         ,'sounds/dragonball.wav'
-        ,'sounds/gameover2.mp3');
+        ,'sounds/gameover2.mp3'
+        ,'sounds/bgm1.mp3');
 
 
     game.onload = function() {
-        var bgm = Sound.load('sounds/bgm1.mp3');
-        var btn_sound = game.assets['sounds/button.mp3'].clone();
+        var originalPlay = enchant.Sound.prototype.play;
+        var originalStop = enchant.Sound.prototype.stop;
+
+        enchant.Sound.prototype.playState = 'stopped';
+        enchant.Sound.prototype.play = function() {
+          this.playState = 'playing';
+          originalPlay.call(this);
+        };
+
+        enchant.Sound.prototype.stop = function() {
+          this.playState = 'stopped';
+          originalStop.call(this);
+        };
+
+        var title_bgm = game.assets['sounds/game_bgm1.mp3'];
+        var bgm = game.assets['sounds/bgm1.mp3'];
+        var super_saiyajin = game.assets['sounds/dragonball.wav'];
+        var btn_sound = game.assets['sounds/button.mp3']
         var gameStart = false;
 
         //ゲームタイトル画面
         var CREATE_GAME_TITLE = function() {
             var title_scene = new Scene();
-            var title_bgm = Sound.load('sounds/game_bgm1.mp3');
+            title_bgm.play();
 
             var title_bg = new Sprite(GAME_WIDTH, GAME_HEIGHT);
             title_bg.image = game.assets['images/titleimage.png'];
@@ -110,7 +127,6 @@ window.onload = function () {
             chara1.pose = 0;
             chara1.status = 1;
             chara1.addEventListener('enterframe', function() {
-              title_bgm.play();
               if (this.x > 1310) this.status = 2;
               if (this.x < -270) this.status = 1;
               switch (this.status) {
@@ -140,7 +156,7 @@ window.onload = function () {
               this.image = game.assets['images/button1a.png'];
             });
             btn_start.addEventListener('touchend', function() {
-              var btn_sound = game.assets['sounds/button.mp3'].clone();
+              var btn_sound = game.assets['sounds/button.mp3'];
               btn_sound.play();
               title_bgm.stop();
               CREATE_GAME_SCENE();
@@ -161,15 +177,20 @@ window.onload = function () {
             game_bg.image = game.assets['images/start.png'];
             game_scene.addChild(game_bg);
             game_scene.addEventListener('touchend', function() {
-                gameStart = true;
-                game.popScene();
+                startGame();
             });
             //スペースキーをspaceに割当
             game.keybind(' '.charCodeAt(0), 'space');
             game_scene.addEventListener('spacebuttondown', function() {
+                startGame();
+            });
+
+            var startGame = function() {
                 gameStart = true;
                 game.popScene();
-            });
+                bgm.play();
+                bgm.volume = 0.5;
+            }
             game.pushScene(game_scene);
         };
         //ゲーム画面
@@ -236,7 +257,7 @@ window.onload = function () {
                     this.isAlive = true;
                     this.isVisible = true;
                     this.isPlay = false;
-                    var hitEnemy = game.assets['sounds/b_074.mp3'].clone();
+                    var hitEnemy = game.assets['sounds/b_074.mp3'];
 
 
                     this.addEventListener('enterframe', function() {
@@ -272,6 +293,7 @@ window.onload = function () {
                         if (!this.isPlay && !this.isAlive) {
                            this.isPlay = true;
                            hitEnemy.play();
+                           hitEnemy.volume = 0.5;
                          }
                         if (this.y > GAME_HEIGHT) this.isVisible = false;
                         if (!this.isVisible) {
@@ -299,8 +321,7 @@ window.onload = function () {
                         this.x = this.pos + x;
                         if (!this.isGot && this.intersect(player)) {
                           this.isGot = true;
-                          var getcoin = game.assets['sounds/coin1.mp3'].clone();
-                          getcoin.volume = 0.5;
+                          var getcoin = game.assets['sounds/coin1.mp3'];
                           getcoin.play();
                           game_playing_scene.removeChild(this);
                           game.score += 100;
@@ -422,7 +443,6 @@ window.onload = function () {
 
             var player = new Player(160, 320);
             player.addEventListener(Event.ENTER_FRAME, function() {
-              console.log("x = " + this.x + "  y = " + this.y);
                 var friction = 0;
                 if (this.vx > 0.3) {
                     friction = -0.4;
@@ -446,7 +466,7 @@ window.onload = function () {
                         this.jumpBoost = JUMP_BOOST; // ジャンプ長押しした時の飛距離
                         this.image = game.assets['images/she_jump2.png'];
                         this.ay = JUMP;  // ジャンプ力
-                        game.assets['sounds/jump.wav'].clone().play();
+                        game.assets['sounds/jump.wav'].play();
                     }
                 }
 
@@ -458,7 +478,7 @@ window.onload = function () {
                   if (game.input.up) {
                       this.jumpBoost = JUMP_BOOST; // ジャンプ長押しした時の飛距離
                       this.ay = -2;  // ジャンプ力
-                      if (game.frame % 10 == 0) game.assets['sounds/jump.wav'].clone().play();
+                      if (game.frame % 10 == 0) game.assets['sounds/jump.wav'].play();
                       this.frame = 3;
                   }
 
@@ -593,6 +613,8 @@ window.onload = function () {
                         player.isDead = true;
                         if (this.y > GAME_HEIGHT) {
                           	game_playing_scene.removeChild(stage);
+                            if (bgm.playState === 'playing')  bgm.stop();
+                            if (super_saiyajin.playState === 'playing') super_saiyajin.stop();
                             CREATE_GAME_OVER_SCENE();
                         }
                         if (player.isDead) {
@@ -630,13 +652,13 @@ window.onload = function () {
             });
 
             game_playing_scene.addEventListener(Event.ENTER_FRAME, function(e) {
-                bgm.volume = 0.2;
-                if (!gameStart) CREATE_START();
-                if (gameStart && !player.isDead && !treasure.isOpen) bgm.play();
+                if (!gameStart) {
+                  CREATE_START();
+                }
                 if (player.isDead || treasure.isOpen) {
-                  bgm.stop();
-                  super_saiyajin.stop();
-                  bgm = Sound.load('sounds/bgm1.mp3');
+                  if (bgm.playState === 'playing') bgm.stop();
+                  if (super_saiyajin.playState === 'playing') super_saiyajin.stop();
+                  bgm = game.assets['sounds/bgm1.mp3'];
                 }
                 if (treasure.isOpen) CREATE_GAME_CLEAR();
 
@@ -674,7 +696,7 @@ window.onload = function () {
                 this.isOpen = true;
                 if (this.isOpen) {
                   this.frame = 1;
-                  bgm.stop();
+                  if (bgm.playState === 'playing') bgm.stop();
                   game.assets['sounds/clear.mp3'].clone().play();
                 }
               }
@@ -683,7 +705,6 @@ window.onload = function () {
               this.x = this.pos + x;
             });
 
-            var super_saiyajin = game.assets['sounds/dragonball.wav'];
             //ドラゴンボール
             var dragonball = new Sprite(50, 50);
             dragonball.image = game.assets['images/dragonball.png'];
@@ -695,10 +716,11 @@ window.onload = function () {
             dragonball.addEventListener('enterframe', function() {
               if (this.intersect(player) && !this.isOpen) {
                  super_saiyajin.play();
+                 super_saiyajin.volume = 1;
                  player.isFlyable = true;
                  game_playing_scene.removeChild(dragonball);
-                 bgm.stop();
-                 bgm = Sound.load('sounds/game_bgm3.mp3');
+                 if (bgm.playState === 'playing') bgm.stop();
+                 bgm = game.assets['sounds/game_bgm3.mp3'];
                }
               var x = Math.min((game.width  - 16) / 2 - player.x, 0);
               x = Math.max(game.width,  x + map.width)  - map.width;
@@ -789,6 +811,7 @@ window.onload = function () {
             var game_over = new Scene();
             var game_over_bg = new Sprite(GAME_WIDTH, GAME_HEIGHT);
             var btn = new Sprite(200, 60);
+
             btn.image = game.assets['images/button2.gif'];
             btn.x = 490;
             btn.y = 400;
@@ -815,5 +838,7 @@ window.onload = function () {
             // CREATE_GAME_CLEAR();
         });
     };
+
+
     game.start();
 };
